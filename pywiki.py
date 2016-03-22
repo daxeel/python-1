@@ -4,8 +4,8 @@
 from sys import argv
 from urllib2 import urlopen
 import requests
-import BeautifulSoup
 import os
+from bs4 import BeautifulSoup
 
 """
 
@@ -43,17 +43,27 @@ def replace_all(text, dic):
     return text
 
 def wiki_ok(lang, query):
-	search	=	requests.get("http://%s.wikipedia.org/wiki/%s" % (lang, query))
+	search = requests.get("http://%s.wikipedia.org/wiki/%s" % (lang, query))
 	if search.status_code != 200:
 		print "\033[1;31mError in connection, or your search was not found.\033[0m\n"
 	else:
-		conn 	= 	BeautifulSoup.BeautifulSoup(search.content)
+		conn = BeautifulSoup(search.content, "html.parser")
 
 		for detect_class in conn.findAll(attrs={'class':'mw-content-ltr'}):
 			success(query)
 
 			if "may refer to:" in detect_class.p.text:
 				print "\033[1;31mThe searches were not specified correctly.\033[0m"
+
+				print "Try these suggested keywords"
+				print "-"*10
+
+				new_conn = BeautifulSoup(search.content, "html.parser")
+				suggest_data = new_conn.find_all('div', {'class': 'mw-content-ltr'})[0].ul.find_all('li')
+				for each in suggest_data:
+					sug_word = each.a['href'][6::]
+					if 'x.php' not in sug_word:
+						print sug_word
 
 			else:
 
